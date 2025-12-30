@@ -8,7 +8,7 @@ app = FastAPI()
 
 @app.get("/")
 async def hello() -> str:
-    return "API is running"
+    return {"message" : "API is running"}
 
 @app.post("/convert-to-pdf/")
 async def convert_to_pdf(file: UploadFile = File(...), target: str = "pdf"):
@@ -36,4 +36,5 @@ async def convert_to_pdf(file: UploadFile = File(...), target: str = "pdf"):
 
     else:
         raise HTTPException(status_code=400, detail="Unsupported format")
+
 
