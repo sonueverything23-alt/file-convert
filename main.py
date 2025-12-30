@@ -1,42 +1,40 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.responses import StreamingResponse
 import img2pdf
-from PIL import Image
 import io
 
 app = FastAPI()
 
-# Send on /
 @app.get("/")
-async def hello() -> str:
-    return {"message" : "API is running"}
+async def hello():
+    return {"message": "API is running"}
 
 @app.post("/convert-to-pdf/")
-async def convert_to_pdf(file: UploadFile = File(...), target: str = "pdf"):
-    # Read bytes
+async def convert_to_pdf(file: UploadFile = File(...)):
     content = await file.read()
 
-    if file.content_type.startswith("image/"):
-        # IMAGE → PDF
+    # IMAGE → PDF
+    if file.content_type and file.content_type.startswith("image/"):
         try:
-            image = Image.open(io.BytesIO(content))
-            buf = io.BytesIO()
-            buf.write(img2pdf.convert(image.filename or "image"))
-            buf.seek(0)
-            return StreamingResponse(buf, media_type="application/pdf")
+            pdf_bytes = img2pdf.convert(content)
+            buf = io.BytesIO(pdf_bytes)
+
+            return StreamingResponse(
+                buf,
+                media_type="application/pdf",
+                headers={
+                    "Content-Disposition": "attachment; filename=converted.pdf"
+                },
+            )
         except Exception as e:
             raise HTTPException(status_code=500, detail=str(e))
 
+    # WORD → PDF (not implemented)
     elif file.filename.lower().endswith((".docx", ".doc")):
-        # WORD → PDF (simple placeholder — you can refine)
-        try:
-            # For Word, you could use an external conversion
-            raise NotImplementedError("Word → PDF requires external converter")
-        except Exception as e:
-            raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=501,
+            detail="Word to PDF conversion not implemented yet",
+        )
 
     else:
-        raise HTTPException(status_code=400, detail="Unsupported format")
-
-
-
+        raise HTTPException(status_code=400, detail="Unsupported file format")
