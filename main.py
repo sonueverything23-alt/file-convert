@@ -64,3 +64,9 @@ async def convert_to_pdf(files: list[UploadFile] = File(...)):
         media_type="application/pdf",
         headers={"Content-Disposition": "attachment; filename=merged.pdf"},
     )
+
+
+# 🔹 This makes the FastAPI app run in Docker
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=3000)
